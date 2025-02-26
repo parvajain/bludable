@@ -13,7 +13,7 @@ cass.set_riot_api_key(RIOT_API_KEY)
 
 # Initialize Discord bot
 intents = discord.Intents.default()
-intents.message_content = True  # Allow bot to read messages
+intents.message_content = True
 bot = discord.Client(intents=intents)
 
 @bot.event
@@ -22,49 +22,50 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    # Ignore messages from the bot itself
     if message.author == bot.user:
         return
 
-    # Check if the message starts with the command
     if message.content.startswith("!track"):
         try:
-            # Extract summoner name and tag
-            parts = message.content.split(" ")
+            # Extract input
+            parts = message.content.split(" ", 1)
+            print("Split parts:", parts)  # Debug line
+
             if len(parts) < 2:
                 await message.channel.send("Invalid format! Use `!track SummonerName#Tag`.")
                 return
 
-            summoner_input = parts[1]  # Get the full input (e.g., "SummonerName#Tag")
+            summoner_input = parts[1].strip()
+            print("Summoner input:", summoner_input)  # Debug line
+
             if "#" not in summoner_input:
                 await message.channel.send("Invalid format! Use `!track SummonerName#Tag`.")
                 return
 
-            summoner_name, summoner_tag = summoner_input.split("#")
+            # Split name and tag
+            summoner_name, summoner_tag = summoner_input.split("#", 1)
+            print("Name:", summoner_name, "Tag:", summoner_tag)  # Debug line
 
             # Fetch account data
             account = cass.get_account(name=summoner_name, tagline=summoner_tag, region="NA")
+            print("Account fetched:", account)  # Debug line
 
-            # Get the summoner object
+            # Get summoner
             summoner = cass.get_summoner(puuid=account.puuid, region="NA")
+            print("Summoner fetched:", summoner)  # Debug line
 
             # Fetch match history
             match_history = summoner.match_history
-            if not match_history:
-                await message.channel.send("No recent matches found for this summoner.")
-                return
+            print("Match history length:", len(match_history))  # Debug line
 
-            # Get the most recent match
+            # Check last match result
             match = match_history[0]
-
-            # Find the summoner in the match
             participant = match.participants[summoner]
-
-            # Check if they won
             result = "won" if participant.stats.win else "lost"
             await message.channel.send(f"{summoner.name} {result} their last game!")
 
         except Exception as e:
+            print("ERROR:", e)  # Debug line
             await message.channel.send(f"Error: {e}")
 
 # Run the bot
