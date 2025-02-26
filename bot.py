@@ -31,7 +31,7 @@ async def on_message(message):
 
         try:
             # Fetch summoner data using Cassiopeia
-            summoner = cass.get_summoner(name=summoner_name)
+            summoner = cass.get_summoner(puuid=summoner_name, region = 'NA')
             match = summoner.match_history[0]  # Get most recent match
             participant = match.participants[summoner]  # Find the summoner in the match
 
