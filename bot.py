@@ -2,7 +2,6 @@ import discord
 import cassiopeia as cass
 from dotenv import load_dotenv
 import os
-from cassiopeia.core.common import NotFoundError
 
 # Load environment variables
 load_dotenv()
