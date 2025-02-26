@@ -60,7 +60,7 @@ async def on_message(message):
 
             # Check last match result
             match = match_history[0]
-            participant = match.participants[summoner]
+            participant = match.participants[summoner.puuid]
             result = "won" if participant.stats.win else "lost"
             await message.channel.send(f"{summoner.name} {result} their last game!")
 
