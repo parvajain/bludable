@@ -64,7 +64,7 @@ async def on_message(message):
             logger.info(f"Account data fetched: PUUID = {account.puuid}")
 
             # Get the summoner object
-            summoner = account.summoner
+            summoner = cass.Summoner(name=summoner_name, region="NA")  # Updated line
             logger.info(f"Summoner data fetched: Summoner ID = {summoner.id}, Name = {summoner.name}")
 
             # Fetch match history
