@@ -2,13 +2,22 @@ import discord
 import cassiopeia as cass
 from dotenv import load_dotenv
 import os
+import logging
 
 # Load environment variables
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 RIOT_API_KEY = os.getenv("RIOT_API_KEY")
 
-# Initialize Cassiopeia
+# Configure Cassiopeia with debug logging
+logging.basicConfig(level=logging.DEBUG)  # <-- Enable verbose logging
+cass.apply_settings({
+    "logging": {
+        "print_calls": True,  # Show API calls
+        "print_riot_api_key": False,
+        "core": "DEBUG"
+    }
+})
 cass.set_riot_api_key(RIOT_API_KEY)
 
 # Initialize Discord bot
@@ -27,59 +36,45 @@ async def on_message(message):
 
     if message.content.startswith("!track"):
         try:
-            # [1] Parse input
+            # Parse input
             parts = message.content.split(" ", 1)
             if len(parts) < 2:
-                await message.channel.send("Error: Use `!track SummonerName#Tag`")
+                await message.channel.send("Error: Invalid format!")
                 return
 
             summoner_input = parts[1].strip()
             if "#" not in summoner_input:
-                await message.channel.send("Error: Missing # in summoner name!")
+                await message.channel.send("Error: Missing #!")
                 return
 
-            # [2] Split name/tag
             summoner_name, summoner_tag = summoner_input.split("#", 1)
-            summoner_name = summoner_name.strip()
-            summoner_tag = summoner_tag.strip()
-            print(f"DEBUG: Tracking {summoner_name}#{summoner_tag}")
+            print(f"\n=== DEBUG: INPUT PARSED ===")
+            print(f"Name: {repr(summoner_name)}")
+            print(f"Tag: {repr(summoner_tag)}")
 
-            # [3] Fetch account (region="NA")
+            # Fetch account
             account = cass.get_account(
                 name=summoner_name,
                 tagline=summoner_tag,
-                region="NA"
+                region="AMERICAS"
             )
-            print(f"DEBUG: Found account - {account.name}#{account.tagline}")
+            print("\n=== DEBUG: ACCOUNT RESPONSE ===")
+            print(f"PUUID: {account.puuid}")
+            print(f"Raw data: {account._data[AccountData]}")  # Print internal data structure
 
-            # [4] Fetch summoner (use cass.Platform)
-            summoner = cass.get_summoner(puuid=account.puuid, region=cass.Region.north_america)
-            print(f"DEBUG: Summoner fetched - Level {summoner.level}")
+            # Fetch summoner
+            summoner = cass.get_summoner(puuid=account.puuid, platform="NA1")
+            print("\n=== DEBUG: SUMMONER RESPONSE ===")
+            print(f"Summoner ID: {summoner.id}")
+            print(f"Raw data: {summoner._data[SummonerData]}")  # Print internal data
 
-            # [5] Get matches
-            matches = summoner.match_history
-            if not matches:
-                await message.channel.send(f"{account.name} has no recent matches!")
-                return
-
-            # [6] Analyze match
-            match = matches[0]
-            print(f"DEBUG: Checking match {match.id}")
-
-            # [7] Find participant
-            participant = next((p for p in match.participants if p.puuid == account.puuid), None)
-            if not participant:
-                await message.channel.send("Error: Couldn't find player in match!")
-                return
-
-            # [8] Send result
-            result = "won" if participant.stats.win else "lost"
-            await message.channel.send(f"{account.name} {result} their last game!")
-            print("DEBUG: Result sent successfully!")
+            # Rest of your code...
 
         except Exception as e:
-            print(f"ERROR: {type(e).__name__}: {str(e)}")
+            print(f"\n=== CRITICAL ERROR ===")
+            print(f"Type: {type(e).__name__}")
+            print(f"Message: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")  # Full traceback
             await message.channel.send(f"Error: {str(e)}")
 
-# Run the bot
 bot.run(DISCORD_TOKEN)
