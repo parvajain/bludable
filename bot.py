@@ -26,13 +26,24 @@ async def on_message(message):
         return  # Ignore messages from the bot itself
 
     if message.content.startswith("!track"):
-        summoner_name = message.content.split(" ")[1]  # Extract summoner name
-        await message.channel.send(f"Fetching data for {summoner_name}...")
+        # Extract summoner name and tag
+        try:
+            summoner_input = message.content.split(" ")[1]  # Get the full input (e.g., "SummonerName#Tag")
+            summoner_name, summoner_tag = summoner_input.split("#")  # Split into name and tag
+        except ValueError:
+            await message.channel.send("Invalid format! Use `!track SummonerName#Tag`.")
+            return
+
+        await message.channel.send(f"Fetching data for {summoner_name} ({summoner_tag})...")
 
         try:
-            # Fetch summoner data using Cassiopeia
-            summoner = cass.get_summoner(puuid=summoner_name, region = 'NA')
-            match = summoner.match_history[0]  # Get most recent match
+            # Fetch account data using Cassiopeia
+            account = cass.Account(name=summoner_name, tag=summoner_tag, region="NA")
+            summoner = account.summoner  # Get the summoner object
+
+            # Fetch match history
+            match_history = summoner.match_history
+            match = match_history[0]  # Get most recent match
             participant = match.participants[summoner]  # Find the summoner in the match
 
             # Format the response
@@ -43,7 +54,10 @@ async def on_message(message):
             )
             await message.channel.send(response)
 
+        except cass.data.NotFoundError:
+            await message.channel.send("Error: Summoner not found.")
         except Exception as e:
+            print(f"Error: {e}")  # Print the full error to the console
             await message.channel.send(f"Error: {e}")
 
 # Run the bot
