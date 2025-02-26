@@ -46,7 +46,7 @@ async def on_message(message):
             account = cass.get_account(name=summoner_name, tagline=summoner_tag, region="NA")
 
             # Get the summoner object
-            summoner = cass.get_summoner(name=summoner_name, region="NA")
+            summoner = cass.get_summoner(puuid=account.puuid, region="NA")
 
             # Fetch match history
             match_history = summoner.match_history
