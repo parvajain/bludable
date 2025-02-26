@@ -53,7 +53,7 @@ async def on_message(message):
             print(f"DEBUG: Found account - {account.name}#{account.tagline}")
 
             # [4] Fetch summoner (use cass.Platform)
-            summoner = cass.get_summoner(puuid=account.puuid, region=cass.Platform.north_america)
+            summoner = cass.get_summoner(puuid=account.puuid, region=cass.Region.north_america)
             print(f"DEBUG: Summoner fetched - Level {summoner.level}")
 
             # [5] Get matches
