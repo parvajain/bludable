@@ -2,6 +2,7 @@ import discord
 import cassiopeia as cass
 from dotenv import load_dotenv
 import os
+from cassiopeia.core.common import NotFoundError
 
 # Load environment variables
 load_dotenv()
@@ -38,7 +39,7 @@ async def on_message(message):
 
         try:
             # Fetch account data using Cassiopeia
-            account = cass.Account(name=summoner_name, tag=summoner_tag, region="NA")
+            account = cass.get_account(name=summoner_name, tag=summoner_tag, region="NA")
             summoner = account.summoner  # Get the summoner object
 
             # Fetch match history
@@ -54,7 +55,7 @@ async def on_message(message):
             )
             await message.channel.send(response)
 
-        except cass.data.NotFoundError:
+        except NotFoundError:
             await message.channel.send("Error: Summoner not found.")
         except Exception as e:
             print(f"Error: {e}")  # Print the full error to the console
