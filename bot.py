@@ -44,28 +44,27 @@ async def on_message(message):
             summoner_tag = summoner_tag.strip()
             print(f"DEBUG: Tracking {summoner_name}#{summoner_tag}")
 
-            # [3] Fetch account (region="NA" for Americas)
-            print("DEBUG: Fetching account... (region=NA)")
-            account = cass.get_account(name=summoner_name, tagline=summoner_tag, region="NA")
-            print(f"DEBUG: Account fetched: {account.name}#{account.tagline} (PUUID={account.puuid})")
+            # [3] Fetch account (region="NA")
+            account = cass.get_account(
+                name=summoner_name,
+                tagline=summoner_tag,
+                region="NA"
+            )
+            print(f"DEBUG: Found account - {account.name}#{account.tagline}")
 
-            # [4] Fetch summoner (region="NA1" for North America platform)
-            print("DEBUG: Fetching summoner... (region=NA1)")
-            summoner = cass.get_summoner(puuid=account.puuid, region="NA1")
-            print(f"DEBUG: Summoner fetched: Level={summoner.level}, ID={summoner.id}")
+            # [4] Fetch summoner (use cass.Platform)
+            summoner = cass.get_summoner(puuid=account.puuid, region=cass.Platform.north_america)
+            print(f"DEBUG: Summoner fetched - Level {summoner.level}")
 
             # [5] Get matches
-            print("DEBUG: Fetching match history...")
             matches = summoner.match_history
-            print(f"DEBUG: Found {len(matches)} matches")
             if not matches:
                 await message.channel.send(f"{account.name} has no recent matches!")
                 return
 
             # [6] Analyze match
             match = matches[0]
-            print(f"DEBUG: Latest match ID={match.id}")
-            print(f"DEBUG: Participants in match: {len(match.participants)}")
+            print(f"DEBUG: Checking match {match.id}")
 
             # [7] Find participant
             participant = next((p for p in match.participants if p.puuid == account.puuid), None)
