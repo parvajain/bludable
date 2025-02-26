@@ -23,44 +23,51 @@ bot = discord.Client(intents=intents)
 
 @bot.event
 async def on_ready():
+    """
+    This function runs when the bot is ready and connected to Discord.
+    """
     logger.info(f"Logged in as {bot.user}!")
 
 @bot.event
 async def on_message(message):
+    """
+    This function runs whenever a message is sent in a channel the bot can see.
+    """
+    # Ignore messages from the bot itself
     if message.author == bot.user:
-        return  # Ignore messages from the bot itself
+        return
 
+    # Check if the message starts with the command
     if message.content.startswith("!track"):
+        logger.info(f"Received !track command from {message.author}: {message.content}")
+
         try:
-            logger.info("Received !track command. Parsing input...")
             # Extract summoner name and tag
             parts = message.content.split(" ")
             if len(parts) < 2:
-                logger.warning("Invalid input format: No summoner name provided.")
+                logger.warning("Invalid format: No summoner name provided.")
                 await message.channel.send("Invalid format! Use `!track SummonerName#Tag`.")
                 return
 
             summoner_input = parts[1]  # Get the full input (e.g., "SummonerName#Tag")
             if "#" not in summoner_input:
-                logger.warning(f"Invalid input format: No '#' found in input '{summoner_input}'.")
+                logger.warning(f"Invalid format: No '#' found in input '{summoner_input}'.")
                 await message.channel.send("Invalid format! Use `!track SummonerName#Tag`.")
                 return
 
-            summoner_name, summoner_tag = summoner_input.split("#")  # Split into name and tag
+            # Split summoner name and tag
+            summoner_name, summoner_tag = summoner_input.split("#")
             logger.info(f"Fetching data for summoner: {summoner_name} (Tag: {summoner_tag})...")
 
-            # Fetch account data using Cassiopeia
-            logger.info("Fetching account data from Riot API...")
+            # Fetch account data
             account = cass.get_account(name=summoner_name, tagline=summoner_tag, region="NA")
             logger.info(f"Account data fetched: PUUID = {account.puuid}")
 
             # Get the summoner object
-            logger.info("Fetching summoner data...")
             summoner = account.summoner
             logger.info(f"Summoner data fetched: Summoner ID = {summoner.id}, Name = {summoner.name}")
 
             # Fetch match history
-            logger.info("Fetching match history...")
             match_history = summoner.match_history
             if not match_history:
                 logger.warning("No match history found for this summoner.")
@@ -75,18 +82,14 @@ async def on_message(message):
             participant = match.participants[summoner]
             logger.info(f"Participant data fetched: Champion = {participant.champion.name}, KDA = {participant.stats.kills}/{participant.stats.deaths}/{participant.stats.assists}")
 
-            # Format the response
-            response = (
-                f"**{summoner.name}** played **{participant.champion.name}** and "
-                f"**{'won' if participant.stats.win else 'lost'}**.\n"
-                f"KDA: {participant.stats.kills}/{participant.stats.deaths}/{participant.stats.assists}"
-            )
-            await message.channel.send(response)
-            logger.info("Response sent successfully.")
+            # Check if they won
+            result = "won" if participant.stats.win else "lost"
+            await message.channel.send(f"{summoner.name} {result} their last game!")
 
         except Exception as e:
-            logger.error(f"An error occurred: {e}", exc_info=True)  # Log the full traceback
+            logger.error(f"An error occurred: {e}", exc_info=True)
             await message.channel.send(f"Error: {e}")
 
 # Run the bot
+logger.info("Starting the bot...")
 bot.run(DISCORD_TOKEN)
