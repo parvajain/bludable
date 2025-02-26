@@ -87,3 +87,6 @@ async def on_message(message):
         except Exception as e:
             logger.error(f"An error occurred: {e}", exc_info=True)  # Log the full traceback
             await message.channel.send(f"Error: {e}")
+
+# Run the bot
+bot.run(DISCORD_TOKEN)
