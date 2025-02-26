@@ -38,7 +38,7 @@ async def on_message(message):
 
         try:
             # Fetch account data using Cassiopeia
-            account = cass.get_account(name=summoner_name, tag=summoner_tag, region="NA")
+            account = cass.get_account(name=summoner_name, tagline=summoner_tag, region="NA")
             summoner = account.summoner  # Get the summoner object
 
             # Fetch match history
@@ -54,8 +54,6 @@ async def on_message(message):
             )
             await message.channel.send(response)
 
-        except NotFoundError:
-            await message.channel.send("Error: Summoner not found.")
         except Exception as e:
             print(f"Error: {e}")  # Print the full error to the console
             await message.channel.send(f"Error: {e}")
